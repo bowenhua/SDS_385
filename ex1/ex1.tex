@@ -1,0 +1,179 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[cmex10]{amsmath}
+\usepackage{amsfonts,amssymb}
+\usepackage{amsthm}
+\usepackage{IEEEtrantools}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{colortbl}
+\usepackage{framed}
+\usepackage[pdftex]{graphicx}
+\graphicspath{{../pdf/}{../jpeg/}{../png/}}
+\DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\usepackage[margin=1.5in]{geometry}
+\usepackage{enumerate}
+\usepackage{bm}
+\usepackage{float}
+\usepackage{array,changepage}
+%\usepackage{epstopdf}
+
+
+
+
+\begin{document}
+\title{Exercise 1}
+\author{Bowen Hua}
+\date{\today}
+\maketitle
+
+\section{Linear Regression}
+\subsection{(A)}
+Matrix form:
+$$
+\hat{\beta} = \arg \min_{\beta \in \mathcal{R}^P} \frac{1}{2} (y - X \beta)^T W(y - X \beta).
+$$
+
+Since $W$ is symmetric and positive semidefinite, this is a convex optimization problem. Its first-order optimality condition is necessary and sufficient:
+$$
+X^TW(y - X\beta) = \bm{0}.
+$$
+\subsection{(B)}
+
+\subsubsection{Method 1: direct inversion}
+
+Described in the problem statement:
+$$
+\beta = (X^T W X)^{-1} X^T W y.
+ $$
+
+To exploit sparsity of $W$, we use broadcasting in Python instead of matrix multiplication to compute operations w.r.t.\ $W$ matrix. This method has a complexity of $O(np^2)$.
+\subsubsection{Method 2: pseudoinverse}
+
+Since the weight matrix $W$ is diagonal, we can define $\sqrt{W}$ to be a diagonal matrix where the $i$-th diagonal element equals $\sqrt{w_i}$. Now we can re-write the optimality condition:
+$$
+\beta  = [(\sqrt{W}X)^T  (\sqrt{W}X)]^{-1}  (\sqrt{W}X)^T y,
+$$
+which we re-write as
+$$
+\beta  = (\sqrt{W}X)^\dagger \sqrt{W} y,
+$$
+where $(\sqrt{W}X)^\dagger$ is the pseudoinverse of $\sqrt{W}X$.
+
+We first ``preprocess'' the feature matrix $X$ and $y$ by multiplying $\sqrt{W}$ on the left. 
+
+We then compute the pseudoinverse through computing SVD of $\sqrt{W}X$. This method is numerically more stable than the direct inverse method.
+\newpage 
+\noindent\rule{\textwidth}{1pt}
+\textbf{Pseudocode for pseudoinverse of matrix $A$}:
+\begin{adjustwidth}{1cm}{1cm}
+{\parindent0pt
+$(U,\Sigma,V) =\texttt{svd}(A)$
+
+for $\Sigma_{ii}$ in $\Sigma$: \texttt{\#traverse through the diagonal elements}
+
+\quad if $\Sigma_{ii} \neq 0$:
+	
+\quad \quad $\Sigma_{ii} = 1/\Sigma_{ii}$
+		
+return $V^T  \Sigma  U^T$}
+\end{adjustwidth}	
+
+\noindent\rule{\textwidth}{1pt}
+
+
+In the Python code, we call \texttt{numpy.linalg.pinv} to perform the pseudoinverse. This method also has a complexity of $O(np^2)$.
+
+In addition, this is the implementation of \texttt{scikit-learn}.
+
+
+
+\subsubsection{Method 3: Cholesky decomposition}
+
+We can use Cholesky decomposition on the matrix $X^TWX$. Now we have $LL^T \beta  = D$. Then we can obtain $\beta$ by solving two linear systems.
+
+This method also has a complexity of $O(np^2)$.
+
+\noindent\rule{\textwidth}{1pt}
+\textbf{Pseudocode for Cholesky-decomposition-based method}:
+\begin{adjustwidth}{1cm}{1cm}
+{\parindent0pt
+Let $C = X^TWX$, $d=X^TWy$. 
+
+Compute Cholesky decomposition $C = LL^T$.
+
+Solve for $\alpha$ in $L\alpha=d$.
+
+Solve for $\beta$ in $L^T {\beta}=\alpha$.
+}
+\end{adjustwidth}	
+\noindent\rule{\textwidth}{1pt}
+
+\subsection{(C)}
+
+I coded the three methods in Python, using the \texttt{numpy} package. The codes can be find in my GitHub.
+
+The results are summarized here:
+
+\begin{table}[!h]
+\caption{CPU Times (s) for Three Methods of Weighted Least Squares}
+\centering
+\begin{tabular}{c c c c }
+\firsthline
+$(n,p)$&  Method 1 & Method 2 &Method 3  \\
+\hline
+$(2000,50)$& 0.001 & 0.007 & 0.001  \\
+$(1000,1000)$ & 0.122 & 0.346 & 0.064  \\
+$(20000,50)$ & 0.012 & 0.034 & 0.005  \\
+$(50000,50)$ & 0.028& 0.118 & 0.013  \\
+$(5000,5000)$ &  6.402 & 37.00 & 4.462\\
+\hline
+\end{tabular}
+\end{table}
+
+We can see that:
+\begin{itemize}
+	\item Method 3 (Choleskey) consistently performs better than Method 1 (Direct Inverse), which is faster than Method 2 (pseudoinverse). 
+	\item When $X$ is close to a square matrix, the performance of Method 3 is way worse than the other two methods.
+\end{itemize} 
+
+\subsection{(D)}
+
+We use \texttt{scipy.sparse} in Python as our tool for sparse matrix operations. In particular, we use \texttt{scipy.sparse.linalg.lsqr} to solve the sparse least square problem:
+$$
+\beta  = (\sqrt{W}X)^\dagger \sqrt{W} y.
+$$
+
+We generate random $X$ matrices of size $(200000,50)$, with different density. We name the sparse method as Method 4. The results are summarized as follows:
+
+\begin{table}[!h]
+\caption{CPU Times (s) of Four Methods for the Sparse Matrix}
+\centering
+\begin{tabular}{c c c c c }
+\firsthline
+Density&  Method 1 & Method 2 &Method 3 & Method 4  \\
+\hline
+$0.01$& 0.142& 0.417 & 0.056 &0.015  \\
+$0.1$ & 0.116& 0.383 & 0.061 &0.035\\
+$0.25$ & 0.111 & 0.409 & 0.061 & 0.053 \\
+$0.5$ & 0.099& 0.372 & 0.053 &0.212 \\
+$1$ &  0.098 & 0.441 & 0.051& 0.613\\
+\hline
+\end{tabular}
+\end{table}
+
+We can see that:
+\begin{itemize}
+	\item Method 1--3 do not exploit sparsity. Their CPU Times do not change with density.
+	\item When density is less than or equal to $0.25$, the sparse method has an advantage over the other three method. When density is greater than $0.25$, the sparse method is slower, possibly due to overhead of the sparse data structure.
+\end{itemize} 
+
+
+
+
+
+
+
+
+%\bibliographystyle{IEEEtran}
+%\bibliography{gas}
+\end{document}
+
