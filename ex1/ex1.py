@@ -44,34 +44,34 @@ def solve_linear4(X,y,W_vector): # Sparse lsqr
     
     
 
-## Problem (C)
-#np_comb = [(2000, 50), (1000,1000), (20000,50), (50000,50), (5000,5000)]   
-#time1 = []
-#time2 = []
-#time3 = []
-#beta1 = []
-#beta2 = []
-#beta3 = []
-#for i in range(len(np_comb)):
-#    (n,p) = np_comb[i]
-#    (X,y,W_vector) = initialize(n,p)
-#    
-#    start = time()
-#    beta1.append(solve_linear1(X,y,W_vector))
-#    end = time()
-#    time1.append(end-start)
-#    
-#    start = time()
-#    beta2.append(solve_linear2(X,y,W_vector))
-#    end = time()
-#    time2.append(end-start)
-#    
-#    start = time()
-#    beta3.append(solve_linear3(X,y,W_vector))
-#    end = time()
-#    time3.append(end-start)
+#%% Problem (C)
+np_comb = [(2000, 50), (1000,1000), (20000,50), (50000,50), (5000,5000)]   
+time1 = []
+time2 = []
+time3 = []
+beta1 = []
+beta2 = []
+beta3 = []
+for i in range(len(np_comb)):
+    (n,p) = np_comb[i]
+    (X,y,W_vector) = initialize(n,p)
+    
+    start = time()
+    beta1.append(solve_linear1(X,y,W_vector))
+    end = time()
+    time1.append(end-start)
+    
+    start = time()
+    beta2.append(solve_linear2(X,y,W_vector))
+    end = time()
+    time2.append(end-start)
+    
+    start = time()
+    beta3.append(solve_linear3(X,y,W_vector))
+    end = time()
+    time3.append(end-start)
   
-### Problem (D)
+#%% Problem (D)
 density = [0.001,0.01,0.1,0.25,0.5]
 (n,p) = (200000,50)
 
@@ -110,7 +110,7 @@ for dens in density:
     end = time()
     time3_sparse.append(end-start)
 
-#%% Plotting
+#%% Plotting for (D)
 plt.figure()
 plt.yscale('log')
 plt.plot(time1_sparse, label = 'Direct Inverse')

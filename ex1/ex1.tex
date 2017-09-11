@@ -157,9 +157,60 @@ We can see that:
 	\item When density is relatively small, the sparse method has an advantage over all the other three method. When density is relatively large, the sparse method is slower than Method 1 and 3, possibly due to overhead of the sparse data structure.
 \end{itemize} 
 
+\section{Generalized Linear Models}
+
+\subsection{(A)}
+We have $y_i \sim \text{Binomial}(m_i, w_i)$, where 
+$$
+		w_i = \frac{1}{1+\exp(-x_i^T\beta)},
+$$
+$$
+1-w_i = \frac{\exp(-x_i^T\beta)}{1+\exp(-x_i^T\beta)}.
+$$
+
+The negative log likelihood function is:
+\begin{align}
+		\ell(\beta) &= -\log \left \{ \prod_{i=1}^N p(y_i | \beta)  \right \} \\
+		&= -\log \left \{ \prod_{i=1}^N \binom {m_i}{y_i}(w_i)^{y_i}(1-w_i)^{m_i-y_i}  \right \} \\
+		&= - \left \{ \sum_{i=1}^{N} \left ( \log\binom {m_i}{y_i} + y_i \log(w_i) + (m_i-y_i)\log(1-w_i) \right ) \right \} 
+	\end{align}
+	
+We have:
+\begin{align}
+\nabla \log w_i& = - \nabla \log (1 + \exp(-x_i^T\beta)	)\\
+&= \frac{x_i \exp(-x_i^T\beta)}{1 + \exp(-x_i^T\beta)}\\
+& = x_i(1-w_i)
+\end{align}
+
+\begin{align}
+\nabla \log (1-w_i) & = \nabla (-x_i^T\beta)- \nabla \log (1 + \exp(-x_i^T\beta)	)\\
+&= -x_i + x_i (1 - w_i)\\
+& = -x_iw_i
+\end{align}
 
 
 
+Therefore, the gradient of the loss function is:
+\begin{align}
+		\nabla \ell (\beta) &=\sum_{i=1}^N \left ( y_i x_i (1-w_i) - (m_i - y_i) x_i w_i \right ) \\
+		&= \sum_{i=1}^N (m_iw_i-y_i)x_i \\
+		&= X^T(m\circ w-y),
+	\end{align}
+where operator $\circ$ denotes element-wise product.
+
+\subsection{(B)}
+
+We use the data “wdbc.csv” from course website. We use the first 10 features in our model. We add a column of ones into $X$ matrix to represent the intercept term.
+
+To alleviate the numerical issue brought by having a very large $w_i$ value, we first scale the $X$ data using \texttt{scikit-learn preprocessor}. 
+
+We perform a naive gradient descent with a fixed step length of $0.005$. We compute $500$ iterations. The codes are shown in \texttt{logit.py} and the loss function value as a function of iteration count is shown below:
+
+\begin{figure}[!h]
+\caption{Loss function value as a function of iteration count}
+\centering
+\includegraphics[width = \textwidth]{fig_logit}
+\end{figure}
 
 
 
