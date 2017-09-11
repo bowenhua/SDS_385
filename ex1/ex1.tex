@@ -48,19 +48,20 @@ $$
 To exploit sparsity of $W$, we use broadcasting in Python instead of matrix multiplication to compute operations w.r.t.\ $W$ matrix. This method has a complexity of $O(np^2)$.
 \subsubsection{Method 2: pseudoinverse}
 
-Since the weight matrix $W$ is diagonal, we can define $\sqrt{W}$ to be a diagonal matrix where the $i$-th diagonal element equals $\sqrt{w_i}$. Now we can re-write the optimality condition:
+Since the weight matrix $W$ is diagonal, we can define ${W}^{\frac{1}{2}}$ to be a diagonal matrix where the $i$-th diagonal element equals $\sqrt{w_i}$. Now we can re-write the optimality condition:
 $$
-\beta  = [(\sqrt{W}X)^T  (\sqrt{W}X)]^{-1}  (\sqrt{W}X)^T y,
+\beta  = [({W}^{\frac{1}{2}}X)^T  ({W}^{\frac{1}{2}}X)]^{-1}  ({W}^{\frac{1}{2}}X)^T y,
 $$
 which we re-write as
 $$
-\beta  = (\sqrt{W}X)^\dagger \sqrt{W} y,
+\beta  = ({W}^{\frac{1}{2}}X)^\dagger {W}^{\frac{1}{2}} y,
 $$
-where $(\sqrt{W}X)^\dagger$ is the pseudoinverse of $\sqrt{W}X$.
+where $({W}^{\frac{1}{2}}X)^\dagger$ is the pseudoinverse of ${W}^{\frac{1}{2}}X$.
 
-We first ``preprocess'' the feature matrix $X$ and $y$ by multiplying $\sqrt{W}$ on the left. 
+We first ``preprocess'' the feature matrix $X$ and $y$ by multiplying ${W}^{\frac{1}{2}}$ on the left. 
 
-We then compute the pseudoinverse through computing SVD of $\sqrt{W}X$. This method is numerically more stable than the direct inverse method.
+We then compute the pseudoinverse through computing SVD of ${W}^{\frac{1}{2}}X$. This method is numerically more stable than the direct inverse method. (There could be correlation between our observations $X$. Therefore we care about numerical stability.)
+
 \newpage 
 \noindent\rule{\textwidth}{1pt}
 \textbf{Pseudocode for pseudoinverse of matrix $A$}:
@@ -139,31 +140,21 @@ We can see that:
 
 We use \texttt{scipy.sparse} in Python as our tool for sparse matrix operations. In particular, we use \texttt{scipy.sparse.linalg.lsqr} to solve the sparse least square problem:
 $$
-\beta  = (\sqrt{W}X)^\dagger \sqrt{W} y.
+\beta  = ({W}^{\frac{1}{2}}X)^\dagger {W}^{\frac{1}{2}} y.
 $$
 
 We generate random $X$ matrices of size $(200000,50)$, with different density. We name the sparse method as Method 4. The results are summarized as follows:
 
-\begin{table}[!h]
+\begin{figure}[!h]
 \caption{CPU Times (s) of Four Methods for the Sparse Matrix}
 \centering
-\begin{tabular}{c c c c c }
-\firsthline
-Density&  Method 1 & Method 2 &Method 3 & Method 4  \\
-\hline
-$0.01$& 0.142& 0.417 & 0.056 &0.015  \\
-$0.1$ & 0.116& 0.383 & 0.061 &0.035\\
-$0.25$ & 0.111 & 0.409 & 0.061 & 0.053 \\
-$0.5$ & 0.099& 0.372 & 0.053 &0.212 \\
-$1$ &  0.098 & 0.441 & 0.051& 0.613\\
-\hline
-\end{tabular}
-\end{table}
+\includegraphics[width = \textwidth]{fig1}
+\end{figure}
 
 We can see that:
 \begin{itemize}
-	\item Method 1--3 do not exploit sparsity. Their CPU Times do not change with density.
-	\item When density is less than or equal to $0.25$, the sparse method has an advantage over the other three method. When density is greater than $0.25$, the sparse method is slower, possibly due to overhead of the sparse data structure.
+	\item Method 1--3 do not exploit sparsity. Their CPU times do not change with density.
+	\item When density is relatively small, the sparse method has an advantage over all the other three method. When density is relatively large, the sparse method is slower than Method 1 and 3, possibly due to overhead of the sparse data structure.
 \end{itemize} 
 
 

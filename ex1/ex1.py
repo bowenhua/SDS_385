@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -9,6 +10,7 @@ Created on Sat Sep  9 15:03:26 2017
 import numpy as np
 import scipy as sp
 from time import time
+import matplotlib.pyplot as plt
 
 def initialize(n, p):
     X = np.random.rand(n,p)
@@ -43,34 +45,34 @@ def solve_linear4(X,y,W_vector): # Sparse lsqr
     
 
 ## Problem (C)
-np_comb = [(2000, 50), (1000,1000), (20000,50), (50000,50), (5000,5000)]   
-time1 = []
-time2 = []
-time3 = []
-beta1 = []
-beta2 = []
-beta3 = []
-for i in range(len(np_comb)):
-    (n,p) = np_comb[i]
-    (X,y,W_vector) = initialize(n,p)
-    
-    start = time()
-    beta1.append(solve_linear1(X,y,W_vector))
-    end = time()
-    time1.append(end-start)
-    
-    start = time()
-    beta2.append(solve_linear2(X,y,W_vector))
-    end = time()
-    time2.append(end-start)
-    
-    start = time()
-    beta3.append(solve_linear3(X,y,W_vector))
-    end = time()
-    time3.append(end-start)
+#np_comb = [(2000, 50), (1000,1000), (20000,50), (50000,50), (5000,5000)]   
+#time1 = []
+#time2 = []
+#time3 = []
+#beta1 = []
+#beta2 = []
+#beta3 = []
+#for i in range(len(np_comb)):
+#    (n,p) = np_comb[i]
+#    (X,y,W_vector) = initialize(n,p)
+#    
+#    start = time()
+#    beta1.append(solve_linear1(X,y,W_vector))
+#    end = time()
+#    time1.append(end-start)
+#    
+#    start = time()
+#    beta2.append(solve_linear2(X,y,W_vector))
+#    end = time()
+#    time2.append(end-start)
+#    
+#    start = time()
+#    beta3.append(solve_linear3(X,y,W_vector))
+#    end = time()
+#    time3.append(end-start)
   
 ### Problem (D)
-density = [0.01,0.1,0.25,0.5, 1]
+density = [0.001,0.01,0.1,0.25,0.5]
 (n,p) = (200000,50)
 
 time1_sparse  = []
@@ -107,9 +109,21 @@ for dens in density:
     beta3_sparse.append(solve_linear3(X_dense,y,W_vector))
     end = time()
     time3_sparse.append(end-start)
-    
-    
-    
+
+#%% Plotting
+plt.figure()
+plt.yscale('log')
+plt.plot(time1_sparse, label = 'Direct Inverse')
+plt.plot(time2_sparse, label = 'SVD')
+plt.plot(time3_sparse, label = 'Cholesky')
+plt.plot(time4_sparse, label = 'Sparse Method')
+plt.xticks(list(range(5)),[r'$\gamma = 0.001$', r'$\gamma = 0.01$', r'$\gamma = 0.1$', r'$\gamma = 0.25$', r'$\gamma = 0.5$'])
+plt.legend(loc='upper left')
+plt.ylabel('Time [s]')
+plt.xlabel('Density of X')
+plt.ylim(0, 10)
+plt.savefig('fig1.pdf', format = 'pdf')
+
 
 
     
