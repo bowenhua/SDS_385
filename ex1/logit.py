@@ -59,14 +59,13 @@ def optimize(beta, X, y, num_iterations, step_size):
             dbeta, cost = propagate(beta, X, y)          
             beta -= dbeta * (1/(num_iterations))  
             costs.append(cost.flatten())
-    # constant step size
     elif step_size == 'newton':
         for i in range(num_iterations):
             dbeta, cost = propagate(beta, X, y)
             delta_beta = np.linalg.solve(hessian(beta, X),dbeta)            
             beta -= delta_beta  
             costs.append(cost.flatten())
-    else:
+    else: # constant step size
         step_size = float(step_size)
         for i in range(num_iterations):
             dbeta, cost = propagate(beta, X, y)            
@@ -79,9 +78,6 @@ def optimize(beta, X, y, num_iterations, step_size):
 def predict(beta, X):
     '''
     Predict whether the label is 0 or 1 using learned logistic regression parameters 
-    
-    Returns:
-    Y_prediction -- a numpy array (vector) containing all predictions (0/1) for the examples in X
     '''
     m = X.shape[0]
     Y_prediction = np.zeros((m,1))
