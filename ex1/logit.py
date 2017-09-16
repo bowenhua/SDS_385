@@ -63,7 +63,7 @@ def optimize(beta, X, y, num_iterations, step_size):
     elif step_size == 'newton':
         for i in range(num_iterations):
             dbeta, cost = propagate(beta, X, y)
-            delta_beta = np.linalg.solve(hessian(beta, X),-dbeta)            
+            delta_beta = np.linalg.solve(hessian(beta, X),dbeta)            
             beta -= delta_beta  
             costs.append(cost.flatten())
     else:
@@ -98,7 +98,6 @@ def predict(beta, X):
 #%% Read data
 
 traindf = pd.read_csv('wdbc.csv',header=None, usecols=range(1,12))
-traindf[12] = np.ones((569,1))
 traindf[1] = traindf[1].map({"M":1, "B": 0})
 
 trainY = traindf[1].values
@@ -109,6 +108,10 @@ trainX = trainX.values
 # Scaling
 scaler = preprocessing.StandardScaler().fit(trainX)
 trainX = scaler.transform(trainX)
+
+# Add a column of ones after scaling. If added before scaling this new column
+# would have been a column of zeros.
+trainX = np.insert(trainX, 10, 1, axis=1) 
 
 #%% Train
 beta = np.random.rand(11,1) 
@@ -122,7 +125,7 @@ beta1, costs1 = optimize(beta1, trainX, trainY, 50, '0.001')
 beta2, costs2 = optimize(beta2, trainX, trainY, 50, '0.005')
 beta3, costs3 = optimize(beta3, trainX, trainY, 50, '0.01')
 beta4, costs4 = optimize(beta4, trainX, trainY, 50, '1/k')
-beta5, costs5 = optimize(beta4, trainX, trainY, 10, 'newton')
+beta5, costs5 = optimize(beta5, trainX, trainY, 50, 'newton')
 #%% Plot
 
 plt.figure()

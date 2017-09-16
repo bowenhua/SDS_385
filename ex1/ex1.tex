@@ -110,7 +110,7 @@ Solve for $\beta$ in $L^T {\beta}=\alpha$.
 
 \subsection{(C)}
 
-I coded the three methods in Python, using the \texttt{numpy} package. The codes can be find in my GitHub.
+I coded the three methods in Python, using the \texttt{numpy} package. The codes can be found as \texttt{linear\_system.py} in my GitHub.
 
 The results are summarized here:
 
@@ -218,6 +218,7 @@ We perform a naive gradient descent with different step lengths:
 \caption{Loss function value as a function of iteration count}
 \centering
 \includegraphics[width = \textwidth]{fig_logit}
+\label{fig:results}
 \end{figure}
 
 The step size $0.01$ performs well for this dataset. For the first few iterations, the step sizes for the $1/k$ rule are too large, so that the loss function does not decrease as much.
@@ -269,6 +270,20 @@ $$
 	\hat{\beta}_{t+1} = \hat{\beta}_t - (\nabla^2\ell(\hat{\beta}_t))^{-1}\nabla\ell(\hat{\beta_t}),
 $$
 where we have computed the Hessian in the previous subsection.
+
+The results of the Newton's method are also given in Fig. \ref{fig:results}. We can see that after four iterations, the gradient is already very close to zero ($< 10^{-14}$).
+
+\subsection{(E)}
+
+Reflections:
+\begin{itemize}
+	\item Gradient descent requires more iterations, and there is no simple way to determine which step size rule is better. 
+	\item Newton's method converges with far fewer iterations because we are using second-order information. 
+	\item For Newton's method, we need to compute the Hessian matrix, and solve a linear system in each iteration. The computational effort per iteration is greater.
+\end{itemize}
+
+
+
 
 
 
