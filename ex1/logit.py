@@ -15,17 +15,21 @@ import matplotlib.pyplot as plt
 def sigmoid(z):
     """
     Compute the sigmoid of z
-
-    Arguments:
-    z -- A scalar or numpy array of any size.
-
-    Return:
-    s -- sigmoid(z)
     """
 
     s = 1/(1+ np.exp(-z))
     
     return s
+
+def hessian(beta, X):
+    """
+    Compute the Hessian X^TWX
+
+    """
+    w = sigmoid(np.dot(X, beta))
+    w_vector = w * (1-w)
+    
+    return np.dot(X.T, X*w_vector)
 
 def propagate(beta, X, y):
     """
@@ -37,32 +41,37 @@ def propagate(beta, X, y):
     
     w = sigmoid(np.dot(X, beta))                                     # compute activation
     cost = -(np.dot(y.T, np.log(w)) + np.dot((1 - y).T, np.log(1-w)))                          # compute cost
-    
-    # BACKWARD PROPAGATION (TO FIND GRAD)
   
     dbeta = np.dot(X.T, (w-y))
     
     return dbeta, cost
 
 
-def optimize(beta, X, y, num_iterations, learning_rate, print_cost = True):
+def optimize(beta, X, y, num_iterations, step_size):
     """
-    This function optimizes w  by running a gradient descent algorithm
+    This function optimizes beta by running a gradient descent algorithm
     """
     
     costs = []
-    
-    for i in range(num_iterations):
-    
-        dbeta, cost = propagate(beta, X, y)
-        
-        beta -= dbeta * learning_rate
-
-        costs.append(cost.flatten())
-        
-        # Print the cost every 100 training examples
-        if print_cost and i % 100 == 0:
-            print ("Cost after iteration %i: %f" %(i, cost))
+    #variable step size
+    if step_size == '1/k':
+        for i in range(num_iterations):      
+            dbeta, cost = propagate(beta, X, y)          
+            beta -= dbeta * (1/(num_iterations))  
+            costs.append(cost.flatten())
+    # constant step size
+    elif step_size == 'newton':
+        for i in range(num_iterations):
+            dbeta, cost = propagate(beta, X, y)
+            delta_beta = np.linalg.solve(hessian(beta, X),-dbeta)            
+            beta -= delta_beta  
+            costs.append(cost.flatten())
+    else:
+        step_size = float(step_size)
+        for i in range(num_iterations):
+            dbeta, cost = propagate(beta, X, y)            
+            beta -= dbeta * step_size  
+            costs.append(cost.flatten())
     
     
     return beta, costs
@@ -103,17 +112,36 @@ trainX = scaler.transform(trainX)
 
 #%% Train
 beta = np.random.rand(11,1) 
-beta, costs = optimize(beta, trainX, trainY, 500, 0.005, print_cost = True)
+beta1 = beta.copy()
+beta2 = beta.copy()
+beta3 = beta.copy()
+beta4 = beta.copy()
+beta5 = beta.copy()
 
+beta1, costs1 = optimize(beta1, trainX, trainY, 50, '0.001')
+beta2, costs2 = optimize(beta2, trainX, trainY, 50, '0.005')
+beta3, costs3 = optimize(beta3, trainX, trainY, 50, '0.01')
+beta4, costs4 = optimize(beta4, trainX, trainY, 50, '1/k')
+beta5, costs5 = optimize(beta4, trainX, trainY, 10, 'newton')
 #%% Plot
 
 plt.figure()
-plt.plot(costs)
+plt.plot(costs1, label = '0.001')
+plt.plot(costs2, label = '0.005')
+plt.plot(costs3, label = '0.01')
+plt.plot(costs4, label = '1/k')
+plt.plot(costs5, label = 'newton')
 
 plt.ylabel('Loss')
 plt.xlabel('Iteration Count')
+plt.yscale('log')
+plt.legend(loc='upper right')
 plt.savefig('fig_logit.pdf', format = 'pdf')
 
+
+
+
+
 #%% Predict
-Y_prediction = predict(beta, trainX)
+Y_prediction = predict(beta3, trainX)
 print("train accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction - trainY)) * 100))

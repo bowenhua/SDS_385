@@ -12,7 +12,7 @@
 \usepackage[margin=1.5in]{geometry}
 \usepackage{enumerate}
 \usepackage{bm}
-\usepackage{float}
+\usepackage{float,url}
 \usepackage{array,changepage}
 %\usepackage{epstopdf}
 
@@ -160,7 +160,7 @@ We can see that:
 \section{Generalized Linear Models}
 
 \subsection{(A)}
-We have $y_i \sim \text{Binomial}(m_i, w_i)$, where 
+We have $y_i \sim \text{Binomial}(m_i, w_i)$\footnote{For the simpler case of binary logistic regression where we have $y_i \sim \text{Bernoulli}(w_i)$, just apply $m_i = 1$ in the following results.}, where 
 $$
 		w_i = \frac{1}{1+\exp(-x_i^T\beta)},
 $$
@@ -204,7 +204,15 @@ We use the data “wdbc.csv” from course website. We use the first 10 features
 
 To alleviate the numerical issue brought by having a very large $w_i$ value, we first scale the $X$ data using \texttt{scikit-learn preprocessor}. 
 
-We perform a naive gradient descent with a fixed step length of $0.005$. We compute $500$ iterations. The codes are shown in \texttt{logit.py} and the loss function value as a function of iteration count is shown below:
+We perform a naive gradient descent with different step lengths:
+ \begin{itemize}
+ 	\item fixed step size of $0.001$,
+ 	\item fixed step size of $0.005$,
+ 	\item fixed step size of $0.01$, and
+ 	\item variable step size of $1/k$ where $k$ is the iteration count.
+ \end{itemize}
+
+ To clearly see the difference between different step sizes, we compute $50$ iterations. The codes are shown in \texttt{logit.py} and the loss function value as a function of iteration count is shown below:
 
 \begin{figure}[!h]
 \caption{Loss function value as a function of iteration count}
@@ -212,6 +220,55 @@ We perform a naive gradient descent with a fixed step length of $0.005$. We comp
 \includegraphics[width = \textwidth]{fig_logit}
 \end{figure}
 
+The step size $0.01$ performs well for this dataset. For the first few iterations, the step sizes for the $1/k$ rule are too large, so that the loss function does not decrease as much.
+
+I also implemented a \texttt{predict()} function that evaluates the training error of our logistic model. After only $50$ iterations, the training accuracy is $94.02\%$. 
+
+\subsection{(C)}
+Our objective is to compute the Taylor approximation:
+$$
+\hat{\ell}(\beta) = \ell(\beta_0)+(\nabla \ell(\beta))^T(\beta-\beta_0) + \frac{1}{2}(\beta-\beta_0)^T \nabla^2 \ell(\beta) (\beta-\beta_0).
+$$
+We have computed $\nabla \ell(\beta)$ in section (A). Now we compute the $(i,j)$ element of the Hessian $\nabla^2 \ell(\beta)$:
+\begin{align}
+		\frac{\partial^2}{\partial \beta_i \partial \beta _j}\ell (\beta) 
+		&= \frac{\partial}{\partial \beta_i} \left ( \nabla_j \ell(\beta) \right ) \\
+		&= \frac{\partial}{\partial \beta_i} \left ( \sum_{k=1}^N(m_kw_k-y_k)x_{kj} \right )  \\
+		&= \sum_{k=1}^{N} x_{ki}x_{kj}m_k w_k(1-w_k),
+	\end{align}
+where we use the fact that 
+$$
+		\frac{\partial}{\partial \beta_i} w_k = x_{ki} w_k(1-w_k).
+$$
+We can define a new diagonal matrix $W = \text{diag}(m_1w_1(1-w_1),\ldots, m_Nw_N(1-w_N))$, then we can write the Hessian in matrix form:
+$$
+\nabla^2 \ell(\beta) = X^TWX.
+$$
+
+Plugging in the expressions of the gradient and Hessian into the Taylor approximation yields:
+$$
+\hat{\ell}(\beta) = \ell(\beta_0) + (X^T(m\circ w-y))^T(\beta - \beta_0) + \frac{1}{2}(\beta - \beta_0)^T X^T W X (\beta - \beta_0).
+		$$
+		
+Since we do not care about the constant term, we do not keep track of it in the following derivation. Instead, we use $c$ to represent the constant term, without specifying what $c$ is. Using the technique from: \url{https://justindomke.wordpress.com/completing-the-square-in-n-dimensions/}, we can continue our reformation:
+\small
+\begin{align*}
+		\hat{\ell}(\beta) 
+		&= \frac{1}{2} ( [ \beta - \beta_0 ] +(X^T W X)^{-1} X^T (m\circ w-y) )^T X^T W X ( [ \beta - \beta_0 ] +\\
+		& \quad \quad (X^T W X)^{-1} X^T (m\circ w-y) ) + c' \\ 
+		&= \frac{1}{2} (\beta - \beta_0 - X^{-1}W^{-1} (m\circ w-y) )^T X^T W X (\beta - \beta_0 - X^{-1}W^{-1} (m\circ w-y) ) + c' \\
+		&= \frac{1}{2} (X\beta - X\beta_0 + W^{-1} (m\circ w-y) )^T W (X\beta - X\beta_0 + W^{-1} (m\circ w-y) ) + c'' \\
+		&= \frac{1}{2}(z-X\beta)^T W (z-X\beta) + c,
+	\end{align*}
+where $z = X\beta_0 + W^{-1}(y-m\circ w)$.
+
+\subsection{(D)}
+
+Now we use Newton's method to perform our loss minimization. The update rule is as follows:
+$$
+	\hat{\beta}_{t+1} = \hat{\beta}_t - (\nabla^2\ell(\hat{\beta}_t))^{-1}\nabla\ell(\hat{\beta_t}),
+$$
+where we have computed the Hessian in the previous subsection.
 
 
 
