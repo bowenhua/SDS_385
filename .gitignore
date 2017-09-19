@@ -11,3 +11,4 @@
 *.cb2
 *.gz
 *.tex
+.DS_Store

@@ -56,19 +56,25 @@ def optimize(beta, X, y, num_iterations, step_size):
     #variable step size
     if step_size == '1/k':
         for i in range(num_iterations):      
-            dbeta, cost = propagate(beta, X, y)          
+            dbeta, cost = propagate(beta, X, y) 
+            if max(abs(dbeta))<1e-7:
+                break
             beta -= dbeta * (1/(num_iterations))  
             costs.append(cost.flatten())
     elif step_size == 'newton':
         for i in range(num_iterations):
             dbeta, cost = propagate(beta, X, y)
+            if max(abs(dbeta))<1e-7:
+                break
             delta_beta = np.linalg.solve(hessian(beta, X),dbeta)            
             beta -= delta_beta  
             costs.append(cost.flatten())
     else: # constant step size
         step_size = float(step_size)
         for i in range(num_iterations):
-            dbeta, cost = propagate(beta, X, y)            
+            dbeta, cost = propagate(beta, X, y)  
+            if max(abs(dbeta))<1e-7:
+                break
             beta -= dbeta * step_size  
             costs.append(cost.flatten())
     
