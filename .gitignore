@@ -12,3 +12,4 @@
 *.gz
 *.tex
 .DS_Store
+__pycache__/
